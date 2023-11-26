@@ -130,11 +130,11 @@ void ImageUtils::LinearTrasform(cv::Mat& input_image, cv::Mat& contrast_stretche
     }
 }
 
-void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& contours, const double max_size)
+void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& contours, const int max_size)
 {
     std::sort(contours.begin(), contours.end(),
         [](const auto& contour_left, auto& contour_right) {
-            return cv::contourArea(contour_left) > cv::contourArea(contour_right);
+            return cv::boundingRect(contour_left).area() > cv::boundingRect(contour_right).area();
         }
     );
     // Iterate through the sorted rectangles
@@ -143,10 +143,10 @@ void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& con
         std::vector<cv::Point>& contor = contours[i];
         cv::Rect rect = cv::boundingRect(contor);
 
-        if (max_size && cv::contourArea(contor) > max_size)
+        if (max_size && rect.area() > max_size)
         {
             //replace with empty
-            printf("%f \n", cv::contourArea(contor));
+            printf("%d \n", rect.area());
             contours[i] = std::vector<cv::Point>();
             continue;
         }

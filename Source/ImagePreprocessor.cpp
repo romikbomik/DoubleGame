@@ -5,7 +5,7 @@
 
 #define BACKGROUND_PIXEL 0
 #define AREA_OF_INTEREST_LOWER_LIMIT 0.01
-#define AREA_OF_INTEREST_UPPER_LIMIT 0.9
+#define AREA_OF_INTEREST_UPPER_LIMIT 0.7
 
 void ImagePreprocessor::ProcessAreasOfInterest(std::vector<cv::Mat>& target_areas, std::vector<cv::Mat>& output_aoi, std::vector<cv::Rect>& output_annotation)
 {
@@ -20,15 +20,14 @@ void ImagePreprocessor::ProcessAreasOfInterest(std::vector<cv::Mat>& target_area
             //edge detection
             cv::Mat edges;
             cv::Canny(image, edges, 20, 50);
-
-            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
+            // Define a kernel for dilation
+            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));  // Adjust the kernel size as needed
             cv::Mat morphed;
             cv::morphologyEx(edges, morphed, cv::MORPH_CLOSE, kernel);
-            //output_aoi.push_back(morphed);
 
             std::vector<std::vector<cv::Point>> contours;
             cv::findContours(morphed, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
-            ImageUtils::FilterOutInnerContours(contours, 10000);
+            ImageUtils::FilterOutInnerContours(contours, upper_limit);
 
             cv::Mat mask = cv::Mat::zeros(edges.size(), CV_8UC1);
             cv::drawContours(mask, contours, -1, cv::Scalar(255), cv::FILLED);
