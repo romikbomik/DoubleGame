@@ -1,5 +1,8 @@
 
 #include "ImageUtils.h"
+#include <algorithm>
+#include <limits>
+
 
 void ImageUtils::Blur(cv::Mat& input_image, cv::Mat& blured)
 {
@@ -91,4 +94,117 @@ void ImageUtils::Pooling(cv::Mat& input_image, cv::Mat& pooled_image, const int 
             pooled_image.at<cv::Vec3b>(i, j) = max_value;
         }
     }
+}
+
+void ImageUtils::ContrastStratch(cv::Mat& input_image, cv::Mat& contrast_stretched)
+{
+    double min_val, max_val;
+    cv::minMaxLoc(input_image, &min_val, &max_val);
+    input_image.convertTo(contrast_stretched, CV_8UC1, 255.0 / (max_val - min_val), -min_val * 255.0 / (max_val - min_val));
+}
+
+void ImageUtils::LinearTrasform(cv::Mat& input_image, cv::Mat& contrast_stretched, const float alpha, const float beta)
+{
+    // Create an output matrix with the same size and type as the input image
+    contrast_stretched = cv::Mat(input_image.size(), input_image.type());
+
+    // Iterate through each pixel of the input image
+    for (int y = 0; y < input_image.rows; y++) {
+        for (int x = 0; x < input_image.cols; x++) {
+            // Get the pixel value at (x, y)
+            uchar pixel_value = input_image.at<uchar>(y, x);
+
+            // Apply the linear transformation
+            
+            uchar transformed_value = std::max(
+                std::numeric_limits<uchar>::min(), 
+                std::min(
+                    static_cast<uchar>(alpha * pixel_value + beta),
+                    std::numeric_limits<uchar>::max()
+                )
+            );
+
+            // Set the transformed value in the output image
+            contrast_stretched.at<uchar>(y, x) = transformed_value;
+        }
+    }
+}
+
+void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& contours, const double max_size)
+{
+    std::sort(contours.begin(), contours.end(),
+        [](const auto& contour_left, auto& contour_right) {
+            return cv::contourArea(contour_left) > cv::contourArea(contour_right);
+        }
+    );
+    // Iterate through the sorted rectangles
+    for (size_t i = 0; i < contours.size(); ++i) {
+        // Assume the current rectangle is the highest level
+        std::vector<cv::Point>& contor = contours[i];
+        cv::Rect rect = cv::boundingRect(contor);
+
+        if (max_size && cv::contourArea(contor) > max_size)
+        {
+            //replace with empty
+            printf("%f \n", cv::contourArea(contor));
+            contours[i] = std::vector<cv::Point>();
+            continue;
+        }
+        for (size_t j = 0; j < i; ++j)
+        {
+            std::vector<cv::Point>& prev_contor = contours[j];
+            //TODO: add cache to save time
+            cv::Rect prev_rect = cv::boundingRect(prev_contor);
+
+            if (prev_contor.empty())
+            {
+                continue;
+            }
+            if (IsRectangleInside(rect, prev_rect, 0.9))
+            {
+                contours[i] = std::vector<cv::Point>();
+                break;
+            }
+        }
+    }
+
+    contours.erase(std::remove_if(contours.begin(), contours.end(), [](const auto& contour) { return contour.empty(); }),
+        contours.end());
+}
+
+bool ImageUtils::IsRectangleInside(const cv::Rect & inner_rect, const cv::Rect & outer_rect)
+{
+    // Check if all four corner points of the inner rectangle are inside the outer rectangle
+    cv::Point top_left = inner_rect.tl(); // Top-left corner of the inner rectangle
+    cv::Point bottom_right = inner_rect.br(); // Bottom-right corner of the inner rectangle
+
+    return (outer_rect.contains(top_left) && outer_rect.contains(bottom_right));
+}
+
+bool ImageUtils::IsRectangleInside(const cv::Rect& inner_rect, const cv::Rect& outer_rect, const float threshold)
+{
+    // Calculate the intersection (overlap) rectangle
+    cv::Rect intersection = inner_rect & outer_rect;
+
+    // Calculate the area of the intersection rectangle
+    double intersectionArea = static_cast<double>(intersection.area());
+
+    // Calculate the area of the inner rectangle
+    double innerRectArea = static_cast<double>(inner_rect.area());
+
+    // Calculate the threshold area (90% of the inner rectangle area)
+    double thresholdArea = threshold * innerRectArea;
+
+    // Check if the intersection area is at least 90% of the inner rectangle area
+    return intersectionArea >= thresholdArea;
+}
+
+void ImageUtils::EnlargeAOI(cv::Mat& input_image, cv::Rect& boundin_box, int padding)
+{
+    cv::Rect enlarged_rect = cv::Rect(boundin_box.x - padding, boundin_box.y - padding, boundin_box.width + (padding * 2), boundin_box.height + (padding * 2));
+    if (enlarged_rect.x < 0)enlarged_rect.x = 0;
+    if (enlarged_rect.y < 0)enlarged_rect.y = 0;
+    if (enlarged_rect.x + enlarged_rect.width >= input_image.cols) { enlarged_rect.width = input_image.cols - enlarged_rect.x; }
+    if (enlarged_rect.y + enlarged_rect.height >= input_image.rows) { enlarged_rect.height = input_image.rows - enlarged_rect.y; }
+    boundin_box = enlarged_rect;
 }

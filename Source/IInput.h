@@ -5,4 +5,5 @@ class IInput
 {
 public:
 	virtual void CaptureImage(cv::Mat& OutputMat) = 0;
+	virtual std::string GetName() = 0;
 };

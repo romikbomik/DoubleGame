@@ -3,14 +3,32 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core.hpp>
 
-void TestInput::CaptureImage(cv::Mat& OutputMat)
+TestInput::TestInput() : 
+	test_name("TestInput"), 
+	number(1)
+{
+
+}
+
+
+void TestInput::CaptureImage(cv::Mat& output_mat)
 {
 	try {
-		OutputMat = cv::imread("TestInput2.jpg");
+		output_mat = cv::imread(test_name + std::to_string(number) + ".jpg");
 	}
 	catch (cv::Exception e)
 	{
-		OutputMat = cv::Mat::zeros(480, 640, CV_8UC3);
+		output_mat = cv::Mat::zeros(480, 640, CV_8UC3);
 	}
 
+}
+
+std::string TestInput::GetName()
+{
+	return test_name + std::to_string(number);
+}
+
+void TestInput::Next()
+{
+	number++;
 }

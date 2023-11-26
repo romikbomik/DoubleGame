@@ -5,5 +5,11 @@
 class TestInput : public IInput
 {
 public:
-	virtual void CaptureImage(cv::Mat& OutputMat) override;
+	TestInput();
+	virtual void CaptureImage(cv::Mat& output_mat) override;
+	virtual std::string GetName() override;
+	void Next();
+private:
+	std::string test_name;
+	int number;
 };

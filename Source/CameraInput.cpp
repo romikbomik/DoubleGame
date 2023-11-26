@@ -9,16 +9,21 @@ CameraInput::CameraInput()
 
 
 
-void CameraInput::CaptureImage(cv::Mat& OutputMat)
+void CameraInput::CaptureImage(cv::Mat& output_mat)
 {
 	if (cap.isOpened())
 	{
-		cap >> OutputMat;
+		cap >> output_mat;
 	}
 	else 
 	{
-		OutputMat = cv::Mat::zeros(480, 640, CV_8UC3);
+		output_mat = cv::Mat::zeros(480, 640, CV_8UC3);
 	}
+}
+
+std::string CameraInput::GetName()
+{
+	return std::string("CameraInput");
 }
 
 CameraInput::~CameraInput()

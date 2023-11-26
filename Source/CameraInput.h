@@ -7,7 +7,8 @@ class CameraInput : public IInput
 public:
 	CameraInput();
 	~CameraInput();
-	virtual void CaptureImage(cv::Mat& OutputMat) override;
+	virtual void CaptureImage(cv::Mat& output_mat) override;
+	virtual std::string GetName() override;
 private:
 	cv::VideoCapture cap;
 };

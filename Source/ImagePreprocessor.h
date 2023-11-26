@@ -5,7 +5,8 @@
 class ImagePreprocessor
 {
 public:
-	static void PreprocessImage(std::vector<cv::Mat>& InputImage, std::vector<cv::Mat>& OutputAOI);
-	static void RemoveBackground(cv::Mat& img, std::vector<cv::Mat>& OutputAOI);
-	static cv::Mat Segmentation(cv::Mat& img, const int kmeans, cv::Mat& centers);
+	static void ProcessAreasOfInterest(std::vector<cv::Mat>& target_areas, std::vector<cv::Mat>& output_aoi, std::vector<cv::Rect>& output_annotation);
+	static void FindAreasOfInterest(cv::Mat& input_image, std::vector<cv::Mat>& output_aoi);
+	static void RemoveBackground(cv::Mat& input_image, std::vector<cv::Mat>& output_aoi);
+	static void Segmentation(cv::Mat& input_image, cv::Mat& output_image, const int k_means, cv::Mat& centers);
 };
