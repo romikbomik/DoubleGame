@@ -7,11 +7,12 @@
 #define AREA_OF_INTEREST_LOWER_LIMIT 0.01
 #define AREA_OF_INTEREST_UPPER_LIMIT 0.7
 
-void ImagePreprocessor::ProcessAreasOfInterest(std::vector<cv::Mat>& target_areas, std::vector<cv::Mat>& output_aoi, std::vector<cv::Rect>& output_annotation)
+void ImagePreprocessor::ProcessAreasOfInterest(std::vector<cv::Mat>& target_areas, std::vector<cv::Mat>& output_aoi, std::vector <std::vector<Annotation>>& output_annotation)
 {
     try
     {
         output_aoi.clear();
+        output_annotation.clear();
         for (auto& image : target_areas)
         {
             const int lower_limit = static_cast<int>(image.cols * image.rows * AREA_OF_INTEREST_LOWER_LIMIT);
@@ -36,20 +37,24 @@ void ImagePreprocessor::ProcessAreasOfInterest(std::vector<cv::Mat>& target_area
             cv::Mat result;  // Create a copy of the original image
             image.copyTo(result);
             cv::Scalar red(0, 0, 255);  // Scalar for the color red (BGR format)
+            std::vector<Annotation> annotations;
 
             for (auto& contour : contours)
             {
                 cv::Rect bounding_rect = cv::boundingRect(contour);
                 int contour_area = bounding_rect.area();
-                //if (true)
                 if (contour_area >= lower_limit && contour_area <= upper_limit)
                 {
-                    cv::Mat AOI = image(bounding_rect).clone();
-                    output_annotation.push_back(bounding_rect);
+                    //cv::Mat AOI = image(bounding_rect).clone();
+                    Annotation annotation;
+                    annotation.name = "Unkown";
+                    annotation.bbox = bounding_rect;
+                    annotations.push_back(annotation);
                     cv::rectangle(result, bounding_rect, red, 1);
                 }
             }
-             output_aoi.push_back(result);
+            output_aoi.push_back(result);
+            output_annotation.push_back(annotations);
         }
     }
     catch (cv::Exception& e)
@@ -83,11 +88,10 @@ void ImagePreprocessor::RemoveBackground(cv::Mat& input_image, std::vector<cv::M
 
         cv::Mat gray;
         cv::cvtColor(blured, gray, cv::COLOR_BGR2GRAY);
-     
 
         cv::Mat threshed;
         // Apply Otsu's thresholding
-        const float dynamic_threahold = cv::threshold(gray, threshed, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+        const double dynamic_threahold = cv::threshold(gray, threshed, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
         cv::Mat morphed;
         cv::morphologyEx(threshed, morphed, cv::MORPH_CLOSE, kernel);
@@ -104,7 +108,6 @@ void ImagePreprocessor::RemoveBackground(cv::Mat& input_image, std::vector<cv::M
         for (auto& contour : contours)
         {
             int padding = 10;
-            int contour_area = cv::contourArea(contour);
             cv::Rect bounding_rect = cv::boundingRect(contour);
             ImageUtils::EnlargeAOI(input_image, bounding_rect, 10);
             if(bounding_rect.area() >= lower_limit)

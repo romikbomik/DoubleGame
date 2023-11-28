@@ -160,7 +160,7 @@ void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& con
             {
                 continue;
             }
-            if (IsRectangleInside(rect, prev_rect, 0.9))
+            if (IsRectangleInside(rect, prev_rect, 0.9f))
             {
                 contours[i] = std::vector<cv::Point>();
                 break;
@@ -187,16 +187,14 @@ bool ImageUtils::IsRectangleInside(const cv::Rect& inner_rect, const cv::Rect& o
     cv::Rect intersection = inner_rect & outer_rect;
 
     // Calculate the area of the intersection rectangle
-    double intersectionArea = static_cast<double>(intersection.area());
-
-    // Calculate the area of the inner rectangle
-    double innerRectArea = static_cast<double>(inner_rect.area());
+    double intersection_area = static_cast<double>(intersection.area());
+    double inner_area = static_cast<double>(inner_rect.area());
 
     // Calculate the threshold area (90% of the inner rectangle area)
-    double thresholdArea = threshold * innerRectArea;
+    double threshold_area = threshold * inner_area;
 
     // Check if the intersection area is at least 90% of the inner rectangle area
-    return intersectionArea >= thresholdArea;
+    return intersection_area >= threshold_area;
 }
 
 void ImageUtils::EnlargeAOI(cv::Mat& input_image, cv::Rect& boundin_box, int padding)

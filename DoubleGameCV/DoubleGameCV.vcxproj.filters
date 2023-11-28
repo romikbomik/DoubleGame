@@ -25,6 +25,15 @@
     <Filter Include="Source Files\Input">
       <UniqueIdentifier>{e42d16eb-64d4-4c8c-8298-ac747c23b52e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Output">
+      <UniqueIdentifier>{08a05a3a-6a50-49b4-af28-b5f6d92d51a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Output">
+      <UniqueIdentifier>{2858edd3-00f5-46f9-9a5e-db845104ca54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Annotation">
+      <UniqueIdentifier>{96525350-c0ac-4289-a8a7-09a23cd48399}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DoubleGameCV.cpp">
@@ -42,6 +51,9 @@
     <ClCompile Include="..\Source\ImageUtils.cpp">
       <Filter>Source Files\Preprocessor</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\CocoOutput.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\ImagePreprocessor.h">
@@ -58,6 +70,15 @@
     </ClInclude>
     <ClInclude Include="..\Source\ImageUtils.h">
       <Filter>Header Files\Preprocessor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\IOutput.h">
+      <Filter>Header Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\CocoOutput.h">
+      <Filter>Header Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Annotation.h">
+      <Filter>Header Files\Annotation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

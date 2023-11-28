@@ -8,44 +8,48 @@
 #include "ImagePreprocessor.h"
 
 #include <filesystem>
-#include "TestInput.h";
-#include "CameraInput.h";
+#include "TestInput.h"
+#include "IOutput.h"
+#include "CocoOutput.h"
+#include "Annotation.h"
+#include "CameraInput.h"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/imgproc.hpp"
 #include <iostream>
 #include <algorithm>
-void Draw(std::string Name, std::vector<cv::Mat>& Input);
-bool AccumulateImageInfo(std::vector<cv::Mat>& Input, int& Height, int& Weight, int& type);
+void Draw(std::string name, std::vector<cv::Mat>& input);
+bool AccumulateImageInfo(std::vector<cv::Mat>& input, int& height, int& weight, int& type);
 
 int main()
 {
-    std::shared_ptr<IInput> Input = std::make_shared<TestInput>();
-    if (!Input)
+    std::shared_ptr<IInput> input = std::make_shared<TestInput>();
+    std::shared_ptr<IOutput> output = std::make_shared<CocoOutput>();
+    if (!input)
     {
         return -1;
     }
 
     cv::Mat frame;
-    std::vector<cv::Mat> AreasOfInterest;
-    std::vector<cv::Mat> ProcessedAreasOfInterest;
-    std::vector<cv::Rect> Annotations;
+    std::vector<cv::Mat> areas_of_interest;
+    std::vector<cv::Mat> pocessed_areas_of_interest;
+    std::vector<std::vector<Annotation>> annotations;
     while (true) {
 
-        Input->CaptureImage(frame);
+        input->CaptureImage(frame);
         // Check for user input to change the threshold
         int key = cv::waitKey(1);
         if (key == 27) // Exit when the 'Esc' key is pressed
             break;
-        else if (key == 'n') // Decrease threshold when 's' key is pressed
+        else if (key == 'n')
         {
-            std::shared_ptr<TestInput> testInput = std::dynamic_pointer_cast<TestInput>(Input);
+            std::shared_ptr<TestInput> testInput = std::dynamic_pointer_cast<TestInput>(input);
             if (testInput)
             {
                 testInput->Next();
             }
         }
-        else if (key == 'p') // Decrease threshold when 's' key is pressed
+        else if (key == 'p')
         {
             int frameNumber = 1;
             std::string filename;
@@ -60,19 +64,16 @@ int main()
 
 
         // Here, you can process the 'frame' using OpenCV functions
-       ImagePreprocessor::FindAreasOfInterest(frame, AreasOfInterest);
-       ImagePreprocessor::ProcessAreasOfInterest(AreasOfInterest, ProcessedAreasOfInterest, Annotations);
+       ImagePreprocessor::FindAreasOfInterest(frame, areas_of_interest);
+       ImagePreprocessor::ProcessAreasOfInterest(areas_of_interest, pocessed_areas_of_interest, annotations);
 
        imshow("Source image", frame);
-       Draw("AreasOfInterest", ProcessedAreasOfInterest);
+       Draw("AreasOfInterest", pocessed_areas_of_interest);
 
        if (key == 's') // Decrease threshold when 's' key is pressed
        {
-           std::string prefix = Input->GetName();
-           for (size_t i = 0; i < AreasOfInterest.size(); i++) {
-               std::string filename = ".\\TrainingData\\" + prefix + "_image" + std::to_string(i) + ".jpg";
-               cv::imwrite(filename, AreasOfInterest[i]);
-           }
+           std::string prefix = input->GetName();
+           output->ReciveResult(areas_of_interest, annotations, prefix);
        }
         
 
@@ -83,15 +84,15 @@ int main()
     return 0;
 }
 
-void Draw(std::string Name, std::vector<cv::Mat>& Input)
+void Draw(std::string name, std::vector<cv::Mat>& input)
 {
-    if (Input.empty())
+    if (input.empty())
     {
         std::cerr << "DoubleGameCV main Draw: empty inout";
         return;
     }
     int canvasHeight, canvasWidth, type;
-    if (!AccumulateImageInfo(Input, canvasHeight, canvasWidth, type))
+    if (!AccumulateImageInfo(input, canvasHeight, canvasWidth, type))
     {
         std::cerr << "DoubleGameCV main Draw: depth missmatch of input images";
     }
@@ -100,7 +101,7 @@ void Draw(std::string Name, std::vector<cv::Mat>& Input)
 
     // Copy each region of interest to the canvas.
     int y_offset = 0;
-    for (const cv::Mat& roi : Input) {
+    for (const cv::Mat& roi : input) {
         roi.copyTo(canvas(cv::Rect(0, y_offset, roi.cols, roi.rows)));
         y_offset += roi.rows;
     }
@@ -110,16 +111,16 @@ void Draw(std::string Name, std::vector<cv::Mat>& Input)
 
 }
 
-bool AccumulateImageInfo(std::vector<cv::Mat>& Input, int& Height, int& Weight, int& type)
+bool AccumulateImageInfo(std::vector<cv::Mat>& input, int& height, int& weight, int& type)
 {
     bool result = false;
     const int invalid_depth = -1;
-    Height = 0;
-    Weight = 0;
+    height = 0;
+    weight = 0;
     type = invalid_depth;
-    for (const cv::Mat& roi : Input) {
-        Weight = std::max(Weight, roi.cols);
-        Height += roi.rows;
+    for (const cv::Mat& roi : input) {
+        weight = std::max(weight, roi.cols);
+        height += roi.rows;
         if (type == invalid_depth)
         {
             type = roi.type();

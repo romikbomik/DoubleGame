@@ -1,5 +1,5 @@
 #pragma once
-#include "TestInput.h";
+#include "TestInput.h"
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core.hpp>
 
