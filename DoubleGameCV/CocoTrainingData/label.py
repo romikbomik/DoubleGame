@@ -159,20 +159,21 @@ def add_click():
         tree = ET.parse(xml_path)
         root = tree.getroot()
         selected_name = selected_label.get()
-        new_object = createnewObject(selected_name, xmin, ymin, xmin+ xmax, ymin + ymax )
-        # Append the new object to the root
-        root.append(new_object)
-        ET.indent(tree, space="\t", level=0)
-        tree.write(xml_path, encoding="utf-8", xml_declaration=True, method="xml")
-        label_dropdown.set("Select a label")
-        entry_xmin.delete(0, tk.END)
-        entry_xmin.insert(0, "0")
-        entry_ymin.delete(0, tk.END)
-        entry_ymin.insert(0, "0")
-        entry_xmax.delete(0, tk.END)
-        entry_xmax.insert(0, "0")
-        entry_ymax.delete(0, tk.END)
-        entry_ymax.insert(0, "0")
+        if selected_name in label_map:
+            new_object = createnewObject(selected_name, xmin, ymin, xmin+ xmax, ymin + ymax )
+            # Append the new object to the root
+            root.append(new_object)
+            ET.indent(tree, space="\t", level=0)
+            tree.write(xml_path, encoding="utf-8", xml_declaration=True, method="xml")
+            label_dropdown.set("Select a label")
+            entry_xmin.delete(0, tk.END)
+            entry_xmin.insert(0, "0")
+            entry_ymin.delete(0, tk.END)
+            entry_ymin.insert(0, "0")
+            entry_xmax.delete(0, tk.END)
+            entry_xmax.insert(0, "0")
+            entry_ymax.delete(0, tk.END)
+            entry_ymax.insert(0, "0")
         user_selection_event.clear()
     except ValueError:
         print("Error")
@@ -254,10 +255,10 @@ def fun():
                     canvas.itemconfig(image_item, image=photoimage)
                     canvas.image = photoimage
 
-
+            tree.write(xml_path, encoding="utf-8", xml_declaration=True)
             user_continue_event.wait()
             user_continue_event.clear()
-            tree.write(xml_path, encoding="utf-8", xml_declaration=True)
+
             
 
 

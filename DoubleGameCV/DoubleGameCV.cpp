@@ -2,15 +2,17 @@
 //
 
 #include <iostream>
+#include "UIOutput.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "ImagePreprocessor.h"
-
 #include <filesystem>
 #include "TestInput.h"
 #include "IOutput.h"
+#include "IModel.h"
 #include "CocoOutput.h"
+#include "FasterRCnnModel.h"
 #include "Annotation.h"
 #include "CameraInput.h"
 #include "opencv2/highgui.hpp"
@@ -18,70 +20,97 @@
 #include "opencv2/imgproc.hpp"
 #include <iostream>
 #include <algorithm>
+#include <Game.h>
+#include "OutputComposite.h"
+
 void Draw(std::string name, std::vector<cv::Mat>& input);
 bool AccumulateImageInfo(std::vector<cv::Mat>& input, int& height, int& weight, int& type);
+void drawAnnotations(cv::Mat& img, const std::vector<Annotation>& annotations);
+
 
 int main()
 {
     std::shared_ptr<IInput> input = std::make_shared<TestInput>();
-    std::shared_ptr<IOutput> output = std::make_shared<CocoOutput>();
+   // std::shared_ptr<IOutput> output = std::make_shared<CocoOutput>();
+    std::shared_ptr<IModel> model = std::make_shared<FasterRCnnModel>();
+    std::shared_ptr<OutputComposite> output_composite = std::make_shared<OutputComposite>(std::make_shared<UIOutput>());
+   // output_composite->Add(std::make_shared<UIOutput>());
     if (!input)
     {
         return -1;
     }
 
-    cv::Mat frame;
-    std::vector<cv::Mat> areas_of_interest;
-    std::vector<cv::Mat> pocessed_areas_of_interest;
-    std::vector<std::vector<Annotation>> annotations;
-    while (true) {
+    Game game = Game(input, output_composite, model);
+    game.MainLoop();
 
-        input->CaptureImage(frame);
-        // Check for user input to change the threshold
-        int key = cv::waitKey(1);
-        if (key == 27) // Exit when the 'Esc' key is pressed
-            break;
-        else if (key == 'n')
-        {
-            std::shared_ptr<TestInput> testInput = std::dynamic_pointer_cast<TestInput>(input);
-            if (testInput)
-            {
-                testInput->Next();
-            }
-        }
-        else if (key == 'p')
-        {
-            int frameNumber = 1;
-            std::string filename;
-            do {
-                std::ostringstream filenameStream;
-                filenameStream << "TestInput"  << frameNumber << ".jpg";
-                filename = filenameStream.str();
-                frameNumber++;
-            } while (std::filesystem::exists(filename));
-            cv::imwrite(filename, frame);
-        }
+    //cv::Mat frame;
+    //std::vector<cv::Mat> areas_of_interest;
+    //std::vector<cv::Mat> pocessed_areas_of_interest;
+    //std::vector<std::vector<Annotation>> annotations;
 
+    ////model->Init();
+    //while (true) {
 
-        // Here, you can process the 'frame' using OpenCV functions
-       ImagePreprocessor::FindAreasOfInterest(frame, areas_of_interest);
-       ImagePreprocessor::ProcessAreasOfInterest(areas_of_interest, pocessed_areas_of_interest, annotations);
-
-       imshow("Source image", frame);
-       Draw("AreasOfInterest", pocessed_areas_of_interest);
-
-       if (key == 's') // Decrease threshold when 's' key is pressed
-       {
-           std::string prefix = input->GetName();
-           output->ReciveResult(areas_of_interest, annotations, prefix);
-       }
-        
+    //    input->CaptureImage(frame);
+    //    // Check for user input to change the threshold
+    //    int key = cv::waitKey(1);
+    //    if (key == 27) // Exit when the 'Esc' key is pressed
+    //        break;
+    //    else if (key == 'n')
+    //    {
+    //        std::shared_ptr<TestInput> testInput = std::dynamic_pointer_cast<TestInput>(input);
+    //        if (testInput)
+    //        {
+    //            testInput->Next();
+    //        }
+    //    }
+    //    else if (key == 'p')
+    //    {
+    //        int frameNumber = 1;
+    //        std::string filename;
+    //        do {
+    //            std::ostringstream filenameStream;
+    //            filenameStream << "TestInput"  << frameNumber << ".jpg";
+    //            filename = filenameStream.str();
+    //            frameNumber++;
+    //        } while (std::filesystem::exists(filename));
+    //        cv::imwrite(filename, frame);
+    //    }
 
 
-    }
-    cv::destroyAllWindows(); // Close the window
+    //    // Here, you can process the 'frame' using OpenCV functions
+    //   ImagePreprocessor::FindAreasOfInterest(frame, areas_of_interest);
+    //   ImagePreprocessor::ProcessAreasOfInterest(areas_of_interest, pocessed_areas_of_interest, annotations);
+
+    //   imshow("Source image", frame);
+    //   Draw("AreasOfInterest", pocessed_areas_of_interest);
+    //   std::vector<Annotation> annotations2;
+    //   //model->Predict(areas_of_interest[0], annotations2);
+    //   //drawAnnotations(areas_of_interest[0], annotations2);
+    //   //imshow("Result", areas_of_interest[0]);
+    //   if (key == 's') // Decrease threshold when 's' key is pressed
+    //   {
+    //        std::string prefix = input->GetName();
+    //        output->ReciveResult(areas_of_interest, annotations, prefix);
+    //   }
+    //    
+
+
+    //}
+    //cv::destroyAllWindows(); // Close the window
 
     return 0;
+}
+
+void drawAnnotations(cv::Mat& img, const std::vector<Annotation>& annotations) {
+    for (const auto& annotation : annotations) {
+        // Draw rectangle
+        cv::rectangle(img, annotation.bbox, cv::Scalar(0, 255, 0), 2);  // Green color, thickness 2
+
+        // Display the name of the annotation
+        cv::putText(img, annotation.name, cv::Point(annotation.bbox.x, annotation.bbox.y - 5),
+            cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);  // Green color, font scale 0.5, thickness 2
+    }
 }
 
 void Draw(std::string name, std::vector<cv::Mat>& input)

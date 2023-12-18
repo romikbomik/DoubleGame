@@ -146,7 +146,6 @@ void ImageUtils::FilterOutInnerContours(std::vector<std::vector<cv::Point>>& con
         if (max_size && rect.area() > max_size)
         {
             //replace with empty
-            printf("%d \n", rect.area());
             contours[i] = std::vector<cv::Point>();
             continue;
         }

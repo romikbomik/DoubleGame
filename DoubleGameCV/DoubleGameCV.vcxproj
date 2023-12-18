@@ -116,14 +116,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\torchvision\vision\torchvision\csrc;$(SolutionDir)\3dParty\libtorch\include\torch\csrc\api\include;$(SolutionDir)\3dParty\libtorch\include;$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world460d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib;$(SolutionDir)\3dParty\torchvision\vision\build\Release;$(SolutionDir)\3dParty\libtorch\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>torch.lib;torch_cpu.lib;c10.lib;torchvision.lib;opencv_world460.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -134,7 +134,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\torchvision\vision\torchvision\csrc;$(SolutionDir)\3dParty\libtorch\include\torch\csrc\api\include;$(SolutionDir)\3dParty\libtorch\include;$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -142,27 +142,36 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world460.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib;$(SolutionDir)\3dParty\torchvision\vision\build\Release;$(SolutionDir)\3dParty\libtorch\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>torch.lib;torch_cpu.lib;c10.lib;torchvision.lib;opencv_world460.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Source\CameraInput.cpp" />
     <ClCompile Include="..\Source\CocoOutput.cpp" />
+    <ClCompile Include="..\Source\FasterRCnnModel.cpp" />
+    <ClCompile Include="..\Source\Game.cpp" />
     <ClCompile Include="..\Source\ImagePreprocessor.cpp" />
     <ClCompile Include="..\Source\ImageUtils.cpp" />
+    <ClCompile Include="..\Source\OutputComposite.cpp" />
     <ClCompile Include="..\Source\TestInput.cpp" />
+    <ClCompile Include="..\Source\UIOutput.cpp" />
     <ClCompile Include="DoubleGameCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Annotation.h" />
     <ClInclude Include="..\Source\CameraInput.h" />
     <ClInclude Include="..\Source\CocoOutput.h" />
+    <ClInclude Include="..\Source\FasterRCnnModel.h" />
+    <ClInclude Include="..\Source\Game.h" />
     <ClInclude Include="..\Source\IInput.h" />
     <ClInclude Include="..\Source\ImagePreprocessor.h" />
     <ClInclude Include="..\Source\ImageUtils.h" />
+    <ClInclude Include="..\Source\IModel.h" />
     <ClInclude Include="..\Source\IOutput.h" />
+    <ClInclude Include="..\Source\OutputComposite.h" />
     <ClInclude Include="..\Source\TestInput.h" />
+    <ClInclude Include="..\Source\UIOutput.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

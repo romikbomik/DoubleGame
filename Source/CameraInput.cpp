@@ -1,6 +1,6 @@
 #pragma once
 #include "CameraInput.h"
-#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
 
 CameraInput::CameraInput()
 {
@@ -14,6 +14,7 @@ void CameraInput::CaptureImage(cv::Mat& output_mat)
 	if (cap.isOpened())
 	{
 		cap >> output_mat;
+		cv::imshow("CameraInput", output_mat);
 	}
 	else 
 	{
@@ -29,5 +30,6 @@ std::string CameraInput::GetName()
 CameraInput::~CameraInput()
 {
 	cap.release();
+	cv::destroyWindow("CameraInput");
 }
 

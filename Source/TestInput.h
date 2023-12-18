@@ -6,6 +6,7 @@ class TestInput : public IInput
 {
 public:
 	TestInput();
+	~TestInput();
 	virtual void CaptureImage(cv::Mat& output_mat) override;
 	virtual std::string GetName() override;
 	void Next();

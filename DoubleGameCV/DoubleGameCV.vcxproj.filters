@@ -34,6 +34,12 @@
     <Filter Include="Header Files\Annotation">
       <UniqueIdentifier>{96525350-c0ac-4289-a8a7-09a23cd48399}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Model">
+      <UniqueIdentifier>{1c286134-5dfe-404d-ae43-4cec28fb4caf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model">
+      <UniqueIdentifier>{76db231e-323f-41c0-976d-d61ca1c69cee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DoubleGameCV.cpp">
@@ -52,6 +58,18 @@
       <Filter>Source Files\Preprocessor</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\CocoOutput.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\FasterRCnnModel.cpp">
+      <Filter>Source Files\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\UIOutput.cpp">
+      <Filter>Source Files\Output</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\OutputComposite.cpp">
       <Filter>Source Files\Output</Filter>
     </ClCompile>
   </ItemGroup>
@@ -79,6 +97,21 @@
     </ClInclude>
     <ClInclude Include="..\Source\Annotation.h">
       <Filter>Header Files\Annotation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\FasterRCnnModel.h">
+      <Filter>Header Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\IModel.h">
+      <Filter>Header Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\UIOutput.h">
+      <Filter>Header Files\Output</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\OutputComposite.h">
+      <Filter>Header Files\Output</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
