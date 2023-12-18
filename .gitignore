@@ -25,6 +25,8 @@ cmake_install.cmake
 CMakeScripts/
 Testing/
 
+3dParty/
+
 # Ignore the output directory (change "Debug" to "Release" if needed)
 Debug/
 Release/
