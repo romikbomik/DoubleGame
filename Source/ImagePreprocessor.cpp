@@ -175,5 +175,35 @@ void ImagePreprocessor::Segmentation(cv::Mat& input_image, cv::Mat& output_image
     }
 }
 
+bool ImagePreprocessor::MotionDetection(const cv::Mat& old_frame, const cv::Mat& current_frame, const float threshold)
+{
+    bool result = false;
+    if (old_frame.empty() || current_frame.empty())
+    {
+        return result;
+    }
+    cv::Mat old_frame_g, current_frame_g, diff;
+    cv::cvtColor(old_frame, old_frame_g, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(current_frame, current_frame_g, cv::COLOR_BGR2GRAY);
+
+    // Compute absolute difference between frames
+    cv::absdiff(old_frame_g, current_frame_g, diff);
+
+    // Apply a threshold to identify significant changes
+    cv::threshold(diff, diff, 30, 255, cv::THRESH_BINARY);
+
+    // Calculate the percentage of white pixels (indicating movement)
+    int movement = cv::countNonZero(diff);
+    if (movement > threshold)
+    {
+        result = true;
+    }
+    else
+    {
+        result = false;
+    }
+    return result;
+}
+
 
 

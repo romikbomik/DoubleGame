@@ -10,4 +10,5 @@ public:
 	static void FindAreasOfInterest(cv::Mat& input_image, std::vector<cv::Mat>& output_aoi);
 	static void RemoveBackground(cv::Mat& input_image, std::vector<cv::Mat>& output_aoi);
 	static void Segmentation(cv::Mat& input_image, cv::Mat& output_image, const int k_means, cv::Mat& centers);
+	static bool MotionDetection(const cv::Mat& old_frame, const cv::Mat& current_frame, const float threshold = 1000);
 };

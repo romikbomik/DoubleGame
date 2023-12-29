@@ -1,10 +1,13 @@
 # Ignore Visual Studio temporary files, build results, and user-specific settings
 *.obj
 *.exe
+*.jpg
+*.xml
 *.pdb
 *.ilk
 *.pch
 *.sdf
+*.pt
 *.suo
 *.idb
 *.ipch
@@ -24,6 +27,9 @@ CMakeCache.txt
 cmake_install.cmake
 CMakeScripts/
 Testing/
+TrainingData/
+TrainingData2/
+__pycache__/
 
 3dParty/
 

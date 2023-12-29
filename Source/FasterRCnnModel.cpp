@@ -24,9 +24,9 @@ bool FasterRCnnModel::Init()
         }
         device = torch::Device(device_type);
         //Load model TODO:: try async
-        model = torch::jit::load("E:\\Projects\\DoubleGameCV\\DoubleGameCV\\models\\faster_rcnn_model_scripted.pt");
+        model = torch::jit::load(".\\models\\faster_rcnn_model_scripted_cpu.pt");
         model.eval();
-        model.to(torch::kCPU);
+        model.to(device);
         LoadLabels();
 
         initialized = true;
@@ -67,39 +67,51 @@ void FasterRCnnModel::LoadLabels()
     labels.insert(labels.end(), std::make_move_iterator(loaded_lables.begin()), std::make_move_iterator(loaded_lables.end()));
 }
 
-void FasterRCnnModel::NonMaxSuppresion(std::vector<TargetInfo>& targets, const float therhold)
+void FasterRCnnModel::NonMaxSuppresion(std::vector<std::vector<TargetInfo>>& targets, const float therhold)
 {
-    std::vector<TargetInfo> finalPrediction;
+    for (std::vector<TargetInfo>& img_target : targets)
+    {
+        std::vector<TargetInfo> finalPrediction;
 
-    // Convert TargetInfo to std::vector<cv::Rect> and std::vector<float> for scores
-    std::vector<cv::Rect> boxes;
-    std::vector<float> scores;
-    for (const auto& info : targets) {
-        boxes.push_back(info.rect);
-        scores.push_back(info.score);
+        // Convert TargetInfo to std::vector<cv::Rect> and std::vector<float> for scores
+        std::vector<cv::Rect> boxes;
+        std::vector<float> scores;
+        for (const auto& info : img_target) {
+            boxes.push_back(info.rect);
+            scores.push_back(info.score);
+        }
+
+        // OpenCV's NMS
+        std::vector<int> keep;
+        cv::dnn::NMSBoxes(boxes, scores, 0.0, therhold, keep);
+
+        // Populate final prediction using the indices to keep
+        for (int idx : keep) {
+            finalPrediction.push_back(img_target[idx]);
+        }
+        img_target = finalPrediction;
     }
-
-    // OpenCV's NMS
-    std::vector<int> keep;
-    cv::dnn::NMSBoxes(boxes, scores, 0.0, therhold, keep);
-
-    // Populate final prediction using the indices to keep
-    for (int idx : keep) {
-        finalPrediction.push_back(targets[idx]);
-    }
-    targets = finalPrediction;
 }
 
-bool FasterRCnnModel::Forward(cv::Mat& input_image, std::vector<TargetInfo>& targets)
+bool FasterRCnnModel::Forward(const std::vector<cv::Mat>& input_images, std::vector<std::vector<TargetInfo>>& targets)
 {
     bool result = false;
     try {
-        torch::Tensor img_tensor = torch::from_blob(input_image.data, { input_image.rows, input_image.cols, 3 }, torch::kFloat32);
-        img_tensor = img_tensor.permute({ 2, 0, 1 });  // Change layout from HWC to CHW
-        img_tensor = img_tensor.to(torch::kCPU);
-        // Create a vector of IValue to hold the input tensors
         std::vector<torch::IValue> inputs;
-        std::vector<torch::Tensor> images = { img_tensor };
+        std::vector<torch::Tensor> images;
+        images.reserve(input_images.size());;
+        for (const cv::Mat& input_image : input_images)
+        {
+            cv::Mat transformed_image;
+            input_image.convertTo(transformed_image, CV_32FC3);
+            // Normalize by dividing by 255.0
+            transformed_image /= 255.0;
+            torch::Tensor img_tensor = torch::from_blob(transformed_image.data, { transformed_image.rows, transformed_image.cols, 3 }, torch::kFloat32);
+            img_tensor = img_tensor.permute({ 2, 0, 1 });  // Change layout from HWC to CHW
+            img_tensor = img_tensor.to(device);
+            images.push_back(img_tensor);
+        }
+        // Create a vector of IValue to hold the input tensors
         inputs.push_back(images);
         // Make a prediction
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -109,11 +121,6 @@ bool FasterRCnnModel::Forward(cv::Mat& input_image, std::vector<TargetInfo>& tar
         std::cout << "Prediction time: " << duration.count() << " milliseconds" << std::endl;
         result = ExtractFasterRCnnTarget(output, targets);
         NonMaxSuppresion(targets);
-        for (TargetInfo info: targets)
-        {
-            //std::cout << "Found: " + labels.at(info.label) << " Score: " << info.score << std::endl;
-            cv::rectangle(input_image, info.rect, cv::Scalar(0, 255, 0), 2);
-        }
         if(!result)
         {
             std::cerr << "FasterRCnnModel::Forward failed to extract target" << std::endl;
@@ -132,9 +139,10 @@ bool FasterRCnnModel::Forward(cv::Mat& input_image, std::vector<TargetInfo>& tar
     return result;
 }
 
-bool FasterRCnnModel::ExtractFasterRCnnTarget(torch::jit::IValue& model_output, std::vector<TargetInfo>& target_out)
+bool FasterRCnnModel::ExtractFasterRCnnTarget(torch::jit::IValue& model_output, std::vector<std::vector<TargetInfo>>& target_out)
 {
     bool result = false;
+    std::vector<TargetInfo> targets;
     if (!model_output.isTuple())
     {
         std::cerr << "ExtractFasterRCnnTarget::model_output expected to be tuple" << std::endl;
@@ -148,43 +156,52 @@ bool FasterRCnnModel::ExtractFasterRCnnTarget(torch::jit::IValue& model_output, 
         return result;
     }
 
-    auto targets_wrapper = target_contatiner.toList()[0].get();
-    if (!targets_wrapper.isGenericDict())
+    auto targets_wrapper = target_contatiner.toList();
+    target_out.clear();
+    target_out.reserve(targets_wrapper.size());
+    for (auto it = targets_wrapper.begin(); it != targets_wrapper.end(); it++)
     {
-        std::cerr << "ExtractFasterRCnnTarget::target contatiner expected to be list" << std::endl;
-        return result;
-    }
-    auto traget = targets_wrapper.toGenericDict();
-    //std::cout << traget << std::endl;
-    if (!traget.contains("boxes"))
-    {
-        std::cerr << "Key 'boxes' not found in the dictionary." << std::endl;
-        return result;
-    }
-    // Extract the 'boxes' tensor from the dictionary
-    torch::Tensor boxes_tensor = traget.at("boxes").toTensor();
-    ExtractBboxs(boxes_tensor, target_out);
+        auto current_element = *it;
+        auto current_value = current_element.get();
+        if (!current_value.isGenericDict())
+        {
+            std::cerr << "ExtractFasterRCnnTarget::target contatiner expected to be list" << std::endl;
+            return result;
+        }
+        auto traget = current_value.toGenericDict();
+        //std::cout << traget << std::endl;
+        if (!traget.contains("boxes"))
+        {
+            std::cerr << "Key 'boxes' not found in the dictionary." << std::endl;
+            return result;
+        }
+        // Extract the 'boxes' tensor from the dictionary
+        torch::Tensor boxes_tensor = traget.at("boxes").toTensor();
+        ExtractBboxs(boxes_tensor, targets);
 
-    if (!traget.contains("scores"))
-    {
-        std::cerr << "Key 'scores' not found in the dictionary." << std::endl;
-        return result;
-    }
-    // Extract the 'boxes' tensor from the dictionary
-    torch::Tensor scores_tensor = traget.at("scores").toTensor();
-    ExtractScores(scores_tensor, target_out);
+        if (!traget.contains("scores"))
+        {
+            std::cerr << "Key 'scores' not found in the dictionary." << std::endl;
+            return result;
+        }
+        // Extract the 'boxes' tensor from the dictionary
+        torch::Tensor scores_tensor = traget.at("scores").toTensor();
+        ExtractScores(scores_tensor, targets);
 
-    if (!traget.contains("labels"))
-    {
-        std::cerr << "Key 'labels' not found in the dictionary." << std::endl;
-        return result;
+        if (!traget.contains("labels"))
+        {
+            std::cerr << "Key 'labels' not found in the dictionary." << std::endl;
+            return result;
+        }
+        // Extract the 'boxes' tensor from the dictionary
+        torch::Tensor labels_tensor = traget.at("labels").toTensor();
+        ExtractLabels(labels_tensor, targets);
+
+        target_out.push_back(std::move(targets));
+        targets = {};
     }
-    // Extract the 'boxes' tensor from the dictionary
-    torch::Tensor labels_tensor = traget.at("labels").toTensor();
-    ExtractLabels(labels_tensor, target_out);
 
     result = true;
-
     return result;
 }
 
@@ -264,40 +281,7 @@ void FasterRCnnModel::ExtractScores(const torch::Tensor& scores_tensor, std::vec
     }
 }
 
-bool FasterRCnnModel::Predict(const cv::Mat& input_image, std::vector<Annotation>& predictions)
-{
-    bool result = false;
-    if (!initialized)
-    {
-        std::cerr << "Model not initialized" << std::endl;
-        return result;
-    }
-
-    cv::Mat transformed_image;
-    input_image.convertTo(transformed_image, CV_32FC3);
-    // Normalize by dividing by 255.0
-    transformed_image /= 255.0;
-    // Measure time before the prediction
-    int ddepth = transformed_image.type();
-    int channels = transformed_image.channels();
-
-    // Print the values
-    std::cout << "Depth: " << ddepth << std::endl;
-    std::cout << "Number of channels: " << channels << std::endl;
-
-    std::vector<TargetInfo> targets;
-    if (!Forward(transformed_image, targets))
-    {
-        std::cerr << "Model fail to predict" << std::endl;
-        return result;
-    }
-    TargetsToAnnotations(targets, predictions);
-    // Measure time after the prediction
-
-	return result;
-}
-
-void FasterRCnnModel::TargetsToAnnotations(const std::vector<TargetInfo>& targets, std::vector<Annotation>& predictions)
+void FasterRCnnModel::TargetsToAnnotations(const std::vector<std::vector<TargetInfo>>& targets, std::vector<std::vector<Annotation>>& predictions)
 {
     predictions.clear();
     if (targets.empty())
@@ -305,11 +289,35 @@ void FasterRCnnModel::TargetsToAnnotations(const std::vector<TargetInfo>& target
         return;
     }
     predictions.reserve(targets.size());
-    for (const TargetInfo& target: targets)
+    for (const std::vector<TargetInfo>& img_targets : targets)
     {
-        Annotation annotation;
-        annotation.bbox = target.rect;
-        annotation.name = labels.at(target.label);
-        predictions.push_back(annotation);
+        std::vector<Annotation> annotations;
+        for (const TargetInfo & target : img_targets)
+        {
+            Annotation annotation;
+            annotation.bbox = target.rect;
+            annotation.name = labels.at(target.label);
+            annotations.push_back(annotation);
+        }
+        predictions.push_back(std::move(annotations));
+        annotations = {};
     }
+}
+
+bool FasterRCnnModel::Predict(const std::vector<cv::Mat>& input_images, std::vector<std::vector<Annotation>>& predictions)
+{
+    bool result = false;
+    if (!initialized)
+    {
+        std::cerr << "Model not initialized" << std::endl;
+        return result;
+    }
+    std::vector<std::vector<TargetInfo>> targets;
+    if (!Forward(input_images, targets))
+    {
+        std::cerr << "Model fail to predict" << std::endl;
+        return result;
+    }
+    TargetsToAnnotations(targets, predictions);
+    return result;
 }

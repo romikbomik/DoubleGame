@@ -56,12 +56,13 @@ void UIOutput::DrawAnnotations(cv::Mat& img, const std::vector<Annotation>& anno
 {
     for (const auto& annotation : annotations) {
         // Draw rectangle
+        if (annotation.name.empty()) { continue; }
         cv::Scalar color = annotation.name == matching_label ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
         cv::rectangle(img, annotation.bbox, color, 2);  // Green color, thickness 2
 
         // Display the name of the annotation
-        cv::putText(img, annotation.name, cv::Point(annotation.bbox.x, annotation.bbox.y - 5),
-            cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);  // Green color, font scale 0.5, thickness 2
+        //cv::putText(img, annotation.name, cv::Point(annotation.bbox.x, annotation.bbox.y - 5),
+         //   cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2); // Green color, font scale 0.5, thickness 2
     }
 }
 
@@ -108,7 +109,7 @@ void UIOutput::ReciveResult(const std::vector<cv::Mat>& output_aoi, const std::v
     }
     FindMatchingLabel(annotations);
 
-    for (int i = 0; i < output_aoi_copy.size(); i++)
+    for (int i = 0; i < annotations.size() && i < output_aoi.size(); i++)
     {
         DrawAnnotations(output_aoi_copy[i], annotations[i]);
     }

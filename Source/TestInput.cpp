@@ -4,7 +4,7 @@
 
 TestInput::TestInput() : 
 	test_name("TestInput"), 
-	number(33)
+	number(1)
 {
 
 }

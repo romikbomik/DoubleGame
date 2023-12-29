@@ -8,5 +8,5 @@ class IModel
 {
 public:
 	virtual bool Init() = 0;
-	virtual bool Predict(const cv::Mat& input_image, std::vector<Annotation>& predictions) = 0;
+	virtual bool Predict(const std::vector<cv::Mat>& input_image, std::vector<std::vector<Annotation>>& predictions) = 0;
 };

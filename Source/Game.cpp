@@ -2,8 +2,11 @@
 #include "ImagePreprocessor.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <future>
 #include "TestInput.h"
 #include <filesystem>
+#include <mutex>
+
 Game::Game(std::shared_ptr<IInput> input, std::shared_ptr<IOutput> output, std::shared_ptr<IModel> model)
 	: input(input), output(output), model(model)
 {
@@ -12,10 +15,13 @@ Game::Game(std::shared_ptr<IInput> input, std::shared_ptr<IOutput> output, std::
 
 void Game::MainLoop()
 {
-    cv::Mat frame;
+    cv::Mat frame, old_frame;
     std::vector<cv::Mat> areas_of_interest;
     std::vector<cv::Mat> pocessed_areas_of_interest;
     std::vector<std::vector<Annotation>> annotations;
+    std::mutex annotations_mutex;
+    std::future<void> future;
+    bool bInvalidate = true;
     while (true) {
 
         input->CaptureImage(frame);
@@ -44,22 +50,16 @@ void Game::MainLoop()
             cv::imwrite(filename, frame);
         }
 
-
         // Here, you can process the 'frame' using OpenCV functions
         ImagePreprocessor::FindAreasOfInterest(frame, areas_of_interest);
-        ImagePreprocessor::ProcessAreasOfInterest(areas_of_interest, pocessed_areas_of_interest, annotations);
-        annotations.clear();
-        annotations.resize(areas_of_interest.size());
-        for (int i = 0; i < areas_of_interest.size(); i++)
+        //ImagePreprocessor::ProcessAreasOfInterest(areas_of_interest, pocessed_areas_of_interest, annotations);
+        if (!ImagePreprocessor::MotionDetection(old_frame, frame))
         {
-            model->Predict(areas_of_interest[i], annotations[i]);
+            //avoid calling model during rapid motion
+            model->Predict(areas_of_interest, annotations);
         }
-
-
-        //if (key == 's') // Decrease threshold when 's' key is pressed
-        //{
         std::string prefix = input->GetName();
         output->ReciveResult(areas_of_interest, annotations, prefix);
-        //}
+        frame.copyTo(old_frame);
     }
 }

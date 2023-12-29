@@ -116,14 +116,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\torchvision\vision\torchvision\csrc;$(SolutionDir)\3dParty\libtorch\include\torch\csrc\api\include;$(SolutionDir)\3dParty\libtorch\include;$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\3dParty\torchvision\vision\torchvision\csrc;$(SolutionDir)\3dParty\libtorch_debug\include\torch\csrc\api\include;$(SolutionDir)\3dParty\libtorch_debug\include;$(SolutionDir)\3dParty\opencv\build\include;$(SolutionDir)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib;$(SolutionDir)\3dParty\torchvision\vision\build\Release;$(SolutionDir)\3dParty\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>torch.lib;torch_cpu.lib;c10.lib;torchvision.lib;opencv_world460.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib;E:\Projects\DoubleGameCV\3dParty\torchvision\vision\build\Debug;$(SolutionDir)\3dParty\libtorch_debug\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>torch.lib;torch_cpu.lib;c10.lib;torchvision.lib;opencv_world460d.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,7 +143,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)\3dParty\opencv\build\x64\vc15\lib;$(SolutionDir)\3dParty\torchvision\vision\build\Release;$(SolutionDir)\3dParty\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>torch.lib;torch_cpu.lib;c10.lib;torchvision.lib;opencv_world460.lib</AdditionalDependencies>
+      <AdditionalDependencies>torch.lib;torch_cpu.lib;torch_cuda.lib;c10.lib;c10_cuda.lib;torchvision.lib;opencv_world460.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
